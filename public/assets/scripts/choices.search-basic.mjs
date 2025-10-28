@@ -989,6 +989,7 @@ var DEFAULT_CONFIG = {
     prependValue: null,
     appendValue: null,
     renderSelectedChoices: 'auto',
+    searchRenderSelectedChoices: 'auto',
     loadingText: 'Loading...',
     noResultsText: 'No results found',
     noChoicesText: 'No choices to choose from',
@@ -2906,6 +2907,9 @@ var Choices = /** @class */ (function () {
         if (typeof config.renderSelectedChoices !== 'boolean') {
             config.renderSelectedChoices = config.renderSelectedChoices === 'always' || isSelectOne;
         }
+        if (typeof config.searchRenderSelectedChoices !== 'boolean') {
+            config.searchRenderSelectedChoices = config.searchRenderSelectedChoices === 'always' || isSelectOne;
+        }
         if (config.closeDropdownOnSelect === 'auto') {
             config.closeDropdownOnSelect = isText || isSelectOne || config.singleModeForMultiSelect;
         }
@@ -3555,7 +3559,10 @@ var Choices = /** @class */ (function () {
         var fragment = document.createDocumentFragment();
         var renderableChoices = function (choices) {
             return choices.filter(function (choice) {
-                return !choice.placeholder && (isSearching ? !!choice.rank : config.renderSelectedChoices || !choice.selected);
+                return !choice.placeholder &&
+                    (isSearching
+                        ? (config.searchRenderSelectedChoices || !choice.selected) && !!choice.rank
+                        : config.renderSelectedChoices || !choice.selected);
             });
         };
         var showLabel = config.appendGroupInSearch && isSearching;
@@ -3763,7 +3770,7 @@ var Choices = /** @class */ (function () {
         if (!items.length || !this.config.removeItems || !this.config.removeItemButton) {
             return;
         }
-        var id = element && parseDataSetId(element.parentElement);
+        var id = element && parseDataSetId(element.closest('[data-id]'));
         var itemToRemove = id && items.find(function (item) { return item.id === id; });
         if (!itemToRemove) {
             return;
@@ -4343,7 +4350,7 @@ var Choices = /** @class */ (function () {
      */
     Choices.prototype._onMouseDown = function (event) {
         var target = event.target;
-        if (!(target instanceof HTMLElement)) {
+        if (!(target instanceof Element)) {
             return;
         }
         // If we have our mouse down on the scrollbar and are on IE11...
